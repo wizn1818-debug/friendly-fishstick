@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Школьный логопед —  Татьяна Николаевна  </title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f7f4ff;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: #f7f4ff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Цвета вкладок: от светлого к тёмному
+    const tabColors = ['#eae1f7', '#d6c5ec', '#c2a9e0', '#ae8dd5'];
+    const colors = {
+      bg: '#f7f4ff',
+      tabText: '#4a3a6b',
+      text: '#4a3a6b',
+    };
+
+    const tabs = ['Обо мне', 'Направления работы', 'Цены', 'Контакты'];
+    let activeTab = 0;
+
+    // Контент всех вкладок
+    const contents = [
+      [
+        " Татьяна Николаевна.",
+        "школьный специалист,логопед, дефектолог, нейролингвист ",
+        "опыт работы со школьниками более 20 лет",
+		"Помогаю детям 6–14 лет:",
+        " с чтением, письмом, орфографией, математикой",
+        "Создаю тёплую, поддерживающую  атмосферу!"
+      ],
+      [
+        "✨ Направления моей работы:",
+        "• Коррекция почерка",
+        "• Коррекция дисграфии",
+        "• Коррекция дизорфографии",
+        "• Коррекция дислексии",
+        "• Развитие связной устной и письменной речи",
+        "• Коррекция звукопроизношения",
+		"• Работа с трудностями формирования вычислительных навыков",
+		"• Работа с трудностями решения задач",
+      ],
+      [
+        "💰 Стоимость занятий:",
+        "• Диагностика —5000р ",
+		
+        "• Индивидуальное занятие (45 мин) — 3000 ₽",
+        
+      ],
+      [
+        "📞 +7 (925) 111-11-11",
+        
+      ]
+    ];
+
+    // === Анимированные объекты для первой вкладки ===
+    const letters = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
+    const digits = '0123456789'.split('');
+    const textSymbols = [...letters, ...digits];
+    const extraItems = ['✏️', ]; // только ручка и тетрадь
+
+    const flyingItems = [];
+    for (let i = 0; i < 32; i++) {
+      const isExtra = Math.random() < 0.15; // ~15% — ручка/тетрадь
+      flyingItems.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: isExtra ? (24 + Math.random() * 16) : (18 + Math.random() * 22),
+        speed: 0.1 + Math.random() * 0.5,
+        symbol: isExtra 
+          ? extraItems[Math.floor(Math.random() * extraItems.length)]
+          : textSymbols[Math.floor(Math.random() * textSymbols.length)],
+        // Яркие розовые/лавандовые цвета — только для букв и цифр
+        color: isExtra 
+          ? null // эмодзи не красим — оставляем оригинальные
+          : ['#ff6b9d', '#ff85a2', '#ff9ec0', '#ffb3d9', '#c4a7e7', '#d8b4f8'][Math.floor(Math.random() * 6)],
+        rotate: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 2.5,
+        isEmoji: isExtra
+      });
+    }
+
+    // Клик по вкладкам
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const tabHeight = 52;
+      if (y < tabHeight) {
+        const tabWidth = canvas.width / tabs.length;
+        const clickedTab = Math.floor(x / tabWidth);
+        if (clickedTab >= 0 && clickedTab < tabs.length) {
+          activeTab = clickedTab;
+          draw();
+          if (activeTab === 0) animate();
+        }
+      }
+    });
+
+    // Анимация
+    function animate() {
+      if (activeTab !== 0) return;
+      draw();
+      flyingItems.forEach(item => {
+        item.y -= item.speed;
+        item.rotate += item.rotSpeed;
+        if (item.y + item.size < 0) {
+          item.y = canvas.height + item.size;
+          item.x = Math.random() * canvas.width;
+        }
+      });
+      requestAnimationFrame(animate);
+    }
+
+    // Отрисовка
+    function draw() {
+      ctx.fillStyle = colors.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const tabHeight = 52;
+      const tabWidth = canvas.width / tabs.length;
+
+      // Вкладки
+      for (let i = 0; i < tabs.length; i++) {
+        ctx.fillStyle = tabColors[i];
+        ctx.fillRect(i * tabWidth, 0, tabWidth, tabHeight);
+        ctx.strokeStyle = colors.tabText;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(i * tabWidth, 0, tabWidth, tabHeight);
+
+        ctx.fillStyle = colors.tabText;
+        ctx.font = `bold ${Math.min(18, canvas.width / 25)}px 'Comic Sans MS', cursive`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(tabs[i], i * tabWidth + tabWidth / 2, tabHeight / 2);
+      }
+
+      // Контент — центрирован
+      const lines = contents[activeTab];
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = colors.text;
+      const fontSize = Math.min(20, canvas.width / 32);
+      ctx.font = `${fontSize}px 'Comic Sans MS', cursive`;
+      const lineHeight = fontSize + 10;
+      const totalHeight = lines.length * lineHeight;
+      const startY = canvas.height / 2 - totalHeight / 2 + lineHeight / 2;
+
+      // Анимированный фон — только на первой вкладке
+      if (activeTab === 0) {
+        flyingItems.forEach(item => {
+          ctx.save();
+          ctx.translate(item.x, item.y);
+          ctx.rotate((item.rotate * Math.PI) / 180);
+          if (item.isEmoji) {
+            // Эмодзи рисуем оригинальными цветами
+            ctx.font = `bold ${item.size}px Arial`;
+            ctx.fillText(item.symbol, 0, 0);
+          } else {
+            // Буквы/цифры — в ярких розовых оттенках
+            ctx.font = `bold ${item.size}px 'Courier New', monospace`;
+            ctx.fillStyle = item.color;
+            ctx.fillText(item.symbol, 0, 0);
+          }
+          ctx.restore();
+        });
+      }
+
+      // Текст по центру
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], canvas.width / 2, startY + i * lineHeight);
+      }
+    }
+
+    // Запуск
+    animate();
+  </script>
+</body>
+</html>
